@@ -102,7 +102,9 @@ function normalize(text) {
   return text
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, ""); // quita tildes (marcas diacríticas combinadas tras NFD)
+    .replace(/[̀-ͯ]/g, "") // quita tildes (marcas diacríticas combinadas tras NFD)
+    .replace(/[.,]/g, "")  // "i.a." / "i,a" -> "ia" (el motor a veces transcribe la sigla con puntos)
+    .replace(/\bi a\b/g, "ia"); // "i a" (letras deletreadas con espacio) -> "ia"
 }
 
 function countMentions(transcript) {
@@ -150,7 +152,8 @@ function startRecognition() {
   recognition = new SpeechRecognitionImpl();
   recognition.lang = RECOGNITION_LANG;
   recognition.continuous = true;
-  recognition.interimResults = false;
+  recognition.interimResults = true; // mantiene el flujo de audio "vivo" con el motor; igual solo contamos los resultados finales
+  recognition.maxAlternatives = 1;
 
   recognition.onstart = () => setStatus("listening", "Escuchando...");
 
@@ -178,9 +181,14 @@ function startRecognition() {
 
   recognition.onend = () => {
     if (!userStopped) {
-      setTimeout(() => {
-        try { recognition.start(); } catch (e) { /* ya estaba iniciado */ }
-      }, 300);
+      // Reinicio inmediato: cada ms de retraso aquí es audio que se pierde.
+      try {
+        recognition.start();
+      } catch (e) {
+        setTimeout(() => {
+          try { recognition.start(); } catch (e2) { /* ya estaba iniciado */ }
+        }, 50);
+      }
     } else {
       setStatus(null, "Apagado");
     }
