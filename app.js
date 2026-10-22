@@ -124,8 +124,24 @@ function countMentions(transcript) {
   return matches;
 }
 
+// El motor de voz a veces reentrega el mismo resultado final varias veces
+// (sobre todo justo después de reiniciar el reconocimiento). Si llega el
+// mismo texto exacto en una ventana corta, se descarta como duplicado.
+const DUPLICATE_WINDOW_MS = 4000;
+let lastTranscriptKey = null;
+let lastTranscriptAt = 0;
+
+function isDuplicateTranscript(key) {
+  const now = Date.now();
+  const isDup = key === lastTranscriptKey && (now - lastTranscriptAt) < DUPLICATE_WINDOW_MS;
+  lastTranscriptKey = key;
+  lastTranscriptAt = now;
+  return isDup;
+}
+
 function registerMentions(matches, rawTranscript) {
   if (matches.length === 0) return;
+  if (isDuplicateTranscript(normalize(rawTranscript))) return;
   rolloverIfNeeded();
   const time = new Date().toLocaleTimeString("es-ES");
   matches.forEach(() => {
@@ -152,7 +168,7 @@ function startRecognition() {
   recognition = new SpeechRecognitionImpl();
   recognition.lang = RECOGNITION_LANG;
   recognition.continuous = true;
-  recognition.interimResults = true; // mantiene el flujo de audio "vivo" con el motor; igual solo contamos los resultados finales
+  recognition.interimResults = false;
   recognition.maxAlternatives = 1;
 
   recognition.onstart = () => setStatus("listening", "Escuchando...");
@@ -181,14 +197,9 @@ function startRecognition() {
 
   recognition.onend = () => {
     if (!userStopped) {
-      // Reinicio inmediato: cada ms de retraso aquí es audio que se pierde.
-      try {
-        recognition.start();
-      } catch (e) {
-        setTimeout(() => {
-          try { recognition.start(); } catch (e2) { /* ya estaba iniciado */ }
-        }, 50);
-      }
+      // Instancia nueva en cada reinicio: reutilizar la misma a veces hace que
+      // el motor reentregue el último resultado final (duplicados en cascada).
+      startRecognition();
     } else {
       setStatus(null, "Apagado");
     }
