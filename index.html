@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Contador de IA</title>
+<meta name="theme-color" content="#0b0d12">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Contador IA">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="top-bar">
+    <div class="status" id="status">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusText">Iniciando...</span>
+    </div>
+    <div class="actions">
+      <button id="historyBtn">Historial</button>
+      <button id="resetBtn">Reiniciar</button>
+    </div>
+  </div>
+
+  <main>
+    <div class="label">Veces que se ha dicho "IA" hoy</div>
+    <div class="counter" id="counter">0</div>
+  </main>
+
+  <div class="modal-overlay" id="historyOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Historial</h2>
+        <button id="closeHistoryBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <h3>Totales por día</h3>
+        <table id="historyTable">
+          <thead><tr><th>Fecha</th><th>Menciones</th></tr></thead>
+          <tbody></tbody>
+        </table>
+
+        <h3>Registro de hoy</h3>
+        <table id="todayLogTable">
+          <thead><tr><th>Hora</th><th>Frase detectada</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
